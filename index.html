@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>剑网三-收入统计工具</title>
+  <!-- 引入 Font Awesome 图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    /* 全局样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "微软雅黑", sans-serif;
+    }
+
+    body {
+      background-color: #121212;
+      color: #fff;
+      padding: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* 顶部导航 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .header .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #a855f7;
+    }
+
+    .nav {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background-color: #4b4b4b;
+      color: #fff;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .nav-btn.active,
+    .nav-btn:hover {
+      background-color: #7b2cbf;
+    }
+
+    /* 主容器：网格布局 */
+    .main {
+      display: grid;
+      grid-template-columns: 350px 1fr; /* 角色管理固定宽度 */
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* 右侧内容区域 */
+    .right-content {
+      display: flex;
+      gap: 24px;
+    }
+
+    /* 通用面板样式 */
+    .panel {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      min-width: 320px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #a855f7;
+    }
+
+    .add-btn {
+      background-color: #a855f7;
+      color: #fff;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .add-btn:hover {
+      background-color: #9c4dcc;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      background-color: #2b2b2b;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .search-input::placeholder {
+      color: #999;
+    }
+
+    /* 角色管理模块 */
+    .character-list {
+      display: flex;
+        flex-direction: column;  /* 垂直排列卡片 */
+    /* grid-template-columns: 1fr; */
+      gap: 0;
+      flex: 1;
+      max-height: calc(10 * (48px + 10px)); /* 10条数据的总高度 */
+      overflow-y: auto;
+    }
+
+    .character-card {
+      /* background-color: #2b2b2b;
+      padding: 12px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      height: 48px; 每条数据固定高度 */
+  height: 60px; /* 固定单个卡片高度 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #2b2b2b;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  overflow: hidden; /* 防止内容溢出 */
+    margin-bottom: 4px; /* 添加一个小的底部间距，使视觉上更清晰 */
+
+}
+
+    .card-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-info .name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 1px;
+    }
+
+    .card-info .deposit {
+      font-size: 0.8rem;
+      color: #ffb84c;
+    }
+
+    .delete-btn {
+      background-color: #444;
+      color: #ff4444;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .delete-btn:hover {
+      background-color: #555;
+    }
+
+    /* 收入记录表单 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #ccc;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      background-color: #2b2b2b;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 0.85rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-input:focus {
+      border-color: #a855f7;
+      outline: none;
+    }
+
+    .category-group {
+      display: flex;
+      gap: 16px;
+    }
+
+    .category-group > div {
+      flex: 1;
+    }
+
+    .submit-btn {
+      background-color: #7b2cbf;
+      color: #fff;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+      font-size: 0.9rem;
+    }
+
+    .submit-btn:hover {
+      background-color: #9c4dcc;
+    }
+
+    /* 数据统计表格 */
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      flex: 1;
+    }
+
+    .stats-table th,
+    .stats-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #444;
+    }
+
+    .stats-table th {
+      color: #a855f7;
+    }
+
+    .stats-table td {
+      color: #ccc;
+    }
+
+    .stats-total {
+      background-color: #2b2b2b;
+      font-weight: 600;
+    }
+
+    /* 收入记录明细 */
+    .records-panel {
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      margin-top: 24px;
+    }
+
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 16px;
+    }
+
+    .records-table th,
+    .records-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #444;
+    }
+
+    .records-table th {
+      color: #a855f7;
+    }
+
+    .records-table td {
+      color: #ccc;
+    }
+
+    .records-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .records-total {
+      background-color: #2b2b2b;
+      font-weight: 600;
+    }
+
+    /* 模态框（新增角色） */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: #2b2b2b;
+      color: #fff;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #a855f7;
+      text-align: center;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .modal-button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel {
+      background: #444;
+      color: #fff;
+    }
+
+    .btn-cancel:hover {
+      background: #555;
+    }
+
+    .btn-save {
+      background: #7b2cbf;
+      color: #fff;
+    }
+
+    .btn-save:hover {
+      background: #9c4dcc;
+    }
+
+    /* Toast 弹窗样式 */
+    #toast {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(30, 30, 30, 0.9);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      max-width: 300px;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+    }
+    
+    #toast.show {
+      opacity: 1;
+    }
+    
+    #toast.success {
+      border-left: 4px solid #10b981;
+    }
+    
+    #toast.error {
+      border-left: 4px solid #ef4444;
+    }
+    
+    #toast i {
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+
+    /* 新增：单位选择器样式 */
+    .unit-selector {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .unit-selector input {
+      flex: 1;
+    }
+    
+    .unit-selector select {
+      width: 80px;
+      background-color: #2b2b2b;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+    
+    .conversion-info {
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<!-- 顶部导航 -->
+<div class="header bg-white shadow-md">
+  <div class="title text-2xl font-bold text-primary p-4">剑网三我跟你拼了</div>
+  <div class="nav flex border-b">
+    <button class="nav-btn active"  data-tab="income">收入记录</button>
+    <button class="nav-btn active" data-tab="stats">数据统计</button>
+  </div>
+</div>
+
+
+  <!-- 主容器：两个模块并排展示 -->
+  <div class="main">
+    <!-- 角色管理模块 -->
+    <div id="character-panel" class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">角色管理</h2>
+        <button id="add-character-btn" class="add-btn">
+          <i class="fas fa-plus mr-2"></i>添加新角色
+        </button>
+      </div>
+      <input 
+        type="text" 
+        id="search-input" 
+        class="search-input" 
+        placeholder="搜索角色名"
+      >
+      <div id="character-list" class="character-list">
+        <!-- 动态渲染角色卡片 -->
+      </div>
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div class="right-content" id="right-content">
+      <!-- 收入记录模块 -->
+      <div id="income-panel" class="panel">
+        <div class="panel-title">记录新收入</div>
+        <form id="income-form">
+          <div class="form-group">
+            <label for="char-select">选择角色</label>
+            <select id="char-select" class="form-input">
+              <option value="">请选择角色</option>
+              <!-- 动态加载角色选项 -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label>收入类型</label>
+            <div class="category-group">
+              <div>
+                <label>大类</label>
+                <select id="income-category" class="form-input">
+                  <option value="">请选择</option>
+                  <option value="PVE">PVE</option>
+                  <option value="日常">日常</option>
+                </select>
+              </div>
+              <div>
+                <label>子类</label>
+                <select id="income-subcategory" class="form-input">
+                  <option value="">请先选择大类</option>
+                  <!-- 动态加载子类 -->
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>收入金额</label>
+            <div class="unit-selector">
+              <input 
+                type="number" 
+                id="income-amount" 
+                class="form-input" 
+                placeholder="输入金额"
+                step="any" 
+                min="0" 
+              >
+              <select id="income-unit" class="form-input">
+                <option value="gold">金</option>
+                <option value="brick">砖</option>
+              </select>
+            </div>
+            <div id="income-conversion-info" class="conversion-info"></div>
+          </div>
+          <div class="form-group">
+            <label for="remark">备注（可选）</label>
+            <textarea 
+              id="remark" 
+              class="form-input" 
+              rows="3" 
+              placeholder="例如：出大铁！出特殊！"
+            ></textarea>
+          </div>
+          <button type="submit" class="submit-btn">记录收入</button>
+        </form>
+      </div>
+
+      <!-- 数据统计模块 -->
+      <div id="stats-panel" class="panel">
+        <div class="panel-title">角色存款统计</div>
+        <div id="stats-info" class="stats-info mb-4">最后更新：<span id="stats-time">2025-06-18 14:30</span></div>
+        <table id="stats-table" class="stats-table">
+          <thead>
+            <tr>
+              <th>角色名</th>
+              <th>本周收入</th>
+              <th>存款</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 动态渲染统计数据 -->
+          </tbody>
+          <tfoot>
+            <tr class="stats-total">
+              <td>总计</td>
+              <td id="total-week-income">-</td>
+              <td id="total-deposit">-</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 收入记录明细 -->
+  <div class="records-panel">
+    <div class="records-header">
+      <h2 class="panel-title">收入记录明细</h2>
+      <div class="filter-group">
+        <select id="record-filter-character" class="form-input" style="width: 150px;">
+          <option value="">所有角色</option>
+          <!-- 动态加载角色选项 -->
+        </select>
+        <select id="record-filter-type" class="form-input" style="width: 150px;">
+          <option value="">所有类型</option>
+          <option value="PVE-10人周常">PVE-10人周常</option>
+          <option value="PVE-10人">PVE-10人</option>
+          <option value="PVE-25pt">PVE-25pt</option>
+          <option value="PVE-25yx">PVE-25yx</option>
+          <option value="日常-大战">日常-大战</option>
+          <option value="日常-茶馆">日常-茶馆</option>
+          <option value="日常-跑商">日常-跑商</option>
+        </select>
+        <!-- 新增时间范围筛选器 -->
+        <select id="record-filter-time" class="form-input" style="width: 150px;">
+          <option value="all">全部时间</option>
+          <option value="thisWeek">本周</option>
+          <option value="thisMonth">本月</option>
+          <option value="custom">自定义日期</option>
+        </select>
+        <!-- 自定义日期输入框，初始隐藏 -->
+        <input type="date" id="custom-start-date" class="form-input" style="width: 150px; display: none;">
+        <input type="date" id="custom-end-date" class="form-input" style="width: 150px; display: none;">
+      </div>
+    </div>
+    <table id="records-table" class="records-table">
+      <thead>
+        <tr>
+          <th>角色</th>
+          <th>类型</th>
+          <th>金额</th>
+          <th>备注</th>
+          <th>日期</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 动态渲染收入记录 -->
+      </tbody>
+      <tfoot>
+        <tr class="records-total">
+          <td colspan="2">当前筛选总计</td>
+          <td id="records-total-amount">-</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- 新增角色模态框 -->
+  <div id="character-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">添加新角色</div>
+      <form id="character-form">
+        <div class="form-group">
+          <label for="char-name">角色名称</label>
+          <input 
+            type="text" 
+            id="char-name" 
+            class="form-input" 
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>初始存款</label>
+          <div class="unit-selector">
+            <input 
+              type="number" 
+              id="char-deposit" 
+              class="form-input" 
+              placeholder="输入金额"
+              step="any"
+              min="0"
+            >
+            <select id="char-deposit-unit" class="form-input">
+              <option value="gold">金</option>
+              <option value="brick">砖</option>
+            </select>
+          </div>
+          <div id="char-deposit-conversion-info" class="conversion-info"></div>
+        </div>
+        <div class="button-group">
+          <button type="button" id="close-char-modal" class="modal-button btn-cancel">
+            取消
+          </button>
+          <button type="submit" class="modal-button btn-save">
+            保存
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast 弹窗 -->
+  <div id="toast" class="toast" style="display: none;">
+    <p id="toast-message"></p>
+  </div>
+
+  <!-- 引入前端逻辑 -->
+  <script src="frontend.js"></script>
+</body>
+</html>
