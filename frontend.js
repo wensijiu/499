@@ -69,28 +69,27 @@ const characterForm = document.getElementById('character-form');
 const searchInput = document.getElementById('search-input');
 
 // 添加新角色
-function addNewCharacter(name, deposit) {
+function addNewCharacter(name, deposit, unit) {
   // 检查角色是否已存在
   if (data.characters.some(char => char.name === name)) {
     showToast('该角色已存在！', false);
     return;
   }
-  
-  // 添加新角色
+  // 存储单位信息，金额统一转为金
+  let depositInGold = unit === 'brick' ? deposit * 10000 : deposit;
   const newCharacter = {
     name: name,
-    initialDeposit: deposit,
-    totalIncome: deposit,
+    initialDeposit: deposit, // 保留原始输入
+    initialDepositUnit: unit, // 记录单位
+    totalIncome: depositInGold, // 存储为金
     income: [],
     weekIncome: 0
   };
-  
   data.characters.push(newCharacter);
   saveData();
   renderCharacterList();
   updateCharacterSelect();
   renderStatsTable();
-  
   showToast(`角色 "${name}" 添加成功！`);
 }
 
@@ -118,11 +117,18 @@ function renderCharacterList() {
 
   let html = '';
   filtered.forEach((char, index) => {
+    // 判断单位
+    let depositStr = '';
+    if (char.initialDepositUnit === 'brick') {
+      depositStr = `${char.initialDeposit} 砖`;
+    } else {
+      depositStr = `${char.initialDeposit} 金`;
+    }
     html += `
       <div class="character-card">
         <div class="card-info">
           <p class="name">${char.name}</p>
-          <p class="deposit">初始存款：${formatGold(char.initialDeposit)}</p>
+          <p class="deposit">初始存款：${depositStr}</p>
         </div>
         <button class="delete-btn" onclick="deleteCharacter(${index})">
           <i class="fas fa-trash"></i>
@@ -663,23 +669,32 @@ document.addEventListener('DOMContentLoaded', () => {
   incomeForm.addEventListener('submit', recordIncome);
   characterForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    
     const name = document.getElementById('char-name').value.trim();
     const deposit = parseFloat(document.getElementById('char-deposit').value);
     const unit = document.getElementById('char-deposit-unit').value;
-    
     if (!name || isNaN(deposit) || deposit < 0) {
       showToast('请输入有效的角色名称和初始存款！', false);
       return;
     }
-    
-    addNewCharacter(name, deposit);
-    
+    addNewCharacter(name, deposit, unit); // 传递单位
     characterModalEl.style.display = 'none';
     characterForm.reset();
   });
 
-  
+  // 新增：为收入记录明细筛选器添加change事件监听，实现自动筛选
+  recordFilterCharacter.addEventListener('change', renderRecordsTable);
+  recordFilterType.addEventListener('change', renderRecordsTable);
+  recordFilterTime.addEventListener('change', () => {
+    // 切换到自定义时显示日期输入框，否则隐藏
+    if (recordFilterTime.value === 'custom') {
+      customStartDate.style.display = 'inline-block';
+      customEndDate.style.display = 'inline-block';
+    } else {
+      customStartDate.style.display = 'none';
+      customEndDate.style.display = 'none';
+    }
+    renderRecordsTable();
+  });
   customStartDate.addEventListener('change', renderRecordsTable);
   customEndDate.addEventListener('change', renderRecordsTable);
   
